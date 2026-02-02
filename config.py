@@ -1,29 +1,96 @@
+"""Configuration for iGaming company analyzer."""
+
 import os
-import dotenv
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Optional
 
-dotenv.load_dotenv()
+from dotenv import load_dotenv
 
-DATA_DIR = "data"
-INPUT_DATA_DIR = f"{DATA_DIR}/input"
-OUTPUT_DATA_DIR = f"{DATA_DIR}/output"
-RAW_OUTPUT_DATA_DIR = f"{OUTPUT_DATA_DIR}/raw"
-CONFIG_DIR = "config"
+load_dotenv()
 
-PROMPT_FILE = f"{CONFIG_DIR}/system_prompt.txt"
 
-CLAUDE_API_TOKEN = os.getenv("CLAUDE_API_TOKEN")
+@dataclass
+class Config:
+    """Main configuration class."""
 
-TAGS = [
-    "Supplier (product, technology or service)",
-    "Operator (team involved in offering betting / games / slots to consumers)"
-]
+    # API
+    model: str = "claude-sonnet-4-5"
+    max_tokens: int = 8192
+    timeout: int = 180  # 3 min, due to web search
 
-def validate_config():
-   if not CLAUDE_API_TOKEN:
-      raise ValueError("CLAUDE_API_TOKEN is not set in environment variables.")
-    
-   for i in ["DATA_DIR", "INPUT_DATA_DIR", "OUTPUT_DATA_DIR", "RAW_OUTPUT_DATA_DIR", "CONFIG_DIR"]:
-      dir_path = globals()[i]
-      if not os.path.exists(dir_path):
-         os.makedirs(dir_path)
-         print(f"Created directory: {dir_path}")
+    # Rate Limiting
+    web_search_rpm: int = 30
+    initial_concurrency: int = 3
+    max_concurrency: int = 10
+
+    # Retry
+    max_retries: int = 5
+    base_delay: float = 2.0
+    max_delay: float = 120.0
+
+    # Paths
+    base_dir: Path = field(default_factory=lambda: Path(__file__).parent)
+    input_file: Path = field(default_factory=lambda: Path("data/input/companies.csv"))
+    raw_output_dir: Path = field(default_factory=lambda: Path("data/raw"))
+    output_dir: Path = field(default_factory=lambda: Path("data/output"))
+    system_prompt_file: Path = field(default_factory=lambda: Path("prompts/system_prompt.txt"))
+
+    # Tools
+    tools: list = field(default_factory=list)
+
+    # API Key (supports both ANTHROPIC_API_KEY and CLAUDE_API_TOKEN)
+    api_key: Optional[str] = field(
+        default_factory=lambda: os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_TOKEN")
+    )
+
+    def __post_init__(self):
+        # Convert to absolute paths
+        self.input_file = self.base_dir / self.input_file
+        self.raw_output_dir = self.base_dir / self.raw_output_dir
+        self.output_dir = self.base_dir / self.output_dir
+        self.system_prompt_file = self.base_dir / self.system_prompt_file
+
+        # Configure tools
+        self.tools = [{
+            "type": "web_search_20250305",
+            "name": "web_search",
+            "max_uses": 5  #TODO: adjust if prompt changes
+        }]
+
+    def validate(self) -> None:
+        """Validate configuration and create directories."""
+        if not self.api_key:
+            raise ValueError(
+                "ANTHROPIC_API_KEY not set. "
+                "Set it in environment or .env file."
+            )
+
+        if not self.system_prompt_file.exists():
+            raise FileNotFoundError(
+                f"System prompt not found: {self.system_prompt_file}"
+            )
+
+        if not self.input_file.exists():
+            raise FileNotFoundError(
+                f"Input CSV not found: {self.input_file}"
+            )
+
+        # Create output directories
+        self.raw_output_dir.mkdir(parents=True, exist_ok=True)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+
+    def load_system_prompt(self) -> str:
+        """Load and return the system prompt."""
+        return self.system_prompt_file.read_text(encoding="utf-8")
+
+
+# CSV column mapping (adapt to actual input structure)
+CSV_COLUMNS = {
+    "company_name": "company_name",
+    "website": "website",
+    "type_of_business": "typeOfBusiness",
+    "sector": "sector",
+    "regions": "regionsOfOperation",
+    "new_regions": "newRegionsTargeting",
+}

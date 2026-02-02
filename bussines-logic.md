@@ -198,7 +198,7 @@ from pathlib import Path
 @dataclass
 class Config:
     # API
-    model: str = "claude-sonnet-4-5-20250514"
+    model: str = "claude-sonnet-4-5"
     max_tokens: int = 8192  # Большой output для полного JSON
     timeout: int = 180  # 3 мин, т.к. много web search
     
@@ -237,7 +237,7 @@ class Config:
 {
   "meta": {
     "processed_at": "2025-02-02T10:30:00Z",
-    "model": "claude-sonnet-4-5-20250514",
+    "model": "claude-sonnet-4-5",
     "processing_time_sec": 45.2,
     "usage": {
       "input_tokens": 3500,
