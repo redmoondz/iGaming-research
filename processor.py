@@ -62,7 +62,7 @@ def format_company_input(company: Dict[str, str]) -> str:
     if additional:
         parts.append(f"**Additional Context:** {'; '.join(additional)}")
 
-    parts.append("\nPlease conduct the analysis and return the JSON output.")
+    parts.append("\nConduct the analysis and return ONLY the raw JSON object. No text before or after.")
     return "\n".join(parts)
 
 
@@ -179,11 +179,21 @@ def validate_response(response: Dict[str, Any]) -> Tuple[bool, List[str]]:
 
 
 def get_response_text(response) -> str:
-    """Extract text content from API response."""
+    """Extract text content from API response.
+
+    When web_search is used, the response contains multiple content blocks:
+    - Text blocks (model's commentary)
+    - Tool_use blocks (web_search calls)
+    - Tool_result blocks (search results)
+
+    We concatenate all text blocks to capture the full response,
+    including the final JSON output that comes after searches.
+    """
+    text_parts = []
     for block in response.content:
         if block.type == "text":
-            return block.text
-    return ""
+            text_parts.append(block.text)
+    return "\n".join(text_parts)
 
 
 def get_usage_stats(response) -> Dict[str, int]:
