@@ -2,7 +2,7 @@
 
 ## Контекст задачи
 
-Обработка ~1800 iGaming компаний через Claude API с web search. Двухэтапный анализ: квалификация (Pass/Fail) → детальный профиль (только для прошедших). Результаты в JSON/CSV.
+Обработка ~ 1800 iGaming компаний через Claude API с web search. Двухэтапный анализ: квалификация (Pass/Fail) → детальный профиль (только для прошедших). Результаты в JSON/CSV.
 
 ---
 
@@ -445,29 +445,6 @@ def flatten_for_csv(results: list[dict]) -> list[dict]:
 
 ---
 
-## Обновлённая оценка ресурсов
-
-### Сценарии по web search
-
-| Сценарий | Searches/company | Всего | Время | Стоимость search |
-|----------|------------------|-------|-------|------------------|
-| Все FAIL на Section A | ~4 | 7,200 | ~4 часа | $72 |
-| 50% qualified | ~7 | 12,600 | ~7 часов | $126 |
-| Все qualified (worst) | ~10 | 18,000 | ~10 часов | $180 |
-
-### Полная стоимость (Sonnet 4.5, 50% qualified)
-
-| Компонент | Расчёт | Стоимость |
-|-----------|--------|-----------|
-| Web Search | 12,600 × $0.01 | $126 |
-| Input tokens (с кешем) | ~90M × $0.30/MTok (cache read) | $27 |
-| Output tokens | ~3.5M × $15/MTok | $52 |
-| **ИТОГО** | | **~$205** |
-
-*Cache read pricing: $0.30/MTok vs $3.00/MTok full price — экономия 90%*
-
----
-
 ## Мониторинг и логирование
 
 ```python
@@ -518,7 +495,7 @@ python main.py --aggregate-only
 python main.py --companies "Pragmatic Play,Evolution Gaming"
 
 # Тестовый прогон (5 компаний)
-python main.py --test-run
+python main.py --test-run 5
 
 # Dry run (проверка без API)
 python main.py --dry-run
@@ -544,14 +521,13 @@ python main.py --concurrency 5
 
 ## Особые кейсы
 
-### Компания без website и LinkedIn
+### Компания без website
 
 ```python
 # Только имя — Claude будет искать сам
 {
     "company_name": "Mystery Games Ltd",
-    "website": "",
-    "linkedin_url": ""
+    "website": ""
 }
 ```
 Ожидаемо больше web searches (~8-10).
@@ -574,4 +550,3 @@ python main.py --concurrency 5
 # Решение: включать website в hash для уникальности
 filename = f"{sanitize(name)}_{hash(name + website)[:8]}.json"
 ```
-
