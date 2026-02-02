@@ -21,7 +21,7 @@ class Config:
 
     # Rate Limiting
     web_search_rpm: int = 30
-    initial_concurrency: int = 3
+    initial_concurrency: int = 2  # Lower to reduce cache creation race after warmup
     max_concurrency: int = 10
 
     # Retry
@@ -94,3 +94,10 @@ CSV_COLUMNS = {
     "regions": "regionsOfOperation",
     "new_regions": "newRegionsTargeting",
 }
+
+# Business type filters
+# Comment out a tag to exclude companies of that type
+BUSINESS_TYPE_TAGS = [
+    # "Supplier (product, technology or service)",
+    "Operator (team involved in offering betting / games / slots to consumers)",
+]
