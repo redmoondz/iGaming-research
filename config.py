@@ -15,6 +15,7 @@ class Config:
     """Main configuration class."""
 
     # API
+    # model: str = "claude-haiku-4-5"
     model: str = "claude-sonnet-4-5"
     max_tokens: int = 8192
     timeout: int = 180  # 3 min, due to web search
@@ -55,7 +56,7 @@ class Config:
         self.tools = [{
             "type": "web_search_20250305",
             "name": "web_search",
-            "max_uses": 5  #TODO: adjust if prompt changes
+            "max_uses": 10  #TODO: adjust if prompt changes
         }]
 
     def validate(self) -> None:

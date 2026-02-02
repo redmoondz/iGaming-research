@@ -210,6 +210,7 @@ async def call_api_with_retry(
     client: AsyncAnthropic,
     messages: List[Dict],
     config: Config,
+    system_prompt: Optional[str] = None,
     max_retries: Optional[int] = None
 ) -> Any:
     """
@@ -219,6 +220,7 @@ async def call_api_with_retry(
         client: Anthropic async client.
         messages: Messages to send.
         config: Configuration object.
+        system_prompt: System prompt with cache control for efficient caching.
         max_retries: Override max retries.
 
     Returns:
@@ -230,14 +232,29 @@ async def call_api_with_retry(
     retries = max_retries or config.max_retries
     delay = config.base_delay
 
+    # Build system parameter with cache control if provided
+    system = None
+    if system_prompt:
+        system = [
+            {
+                "type": "text",
+                "text": system_prompt,
+                "cache_control": {"type": "ephemeral"}
+            }
+        ]
+
     for attempt in range(retries):
         try:
-            response = await client.messages.create(
-                model=config.model,
-                max_tokens=config.max_tokens,
-                tools=config.tools,
-                messages=messages,
-            )
+            create_kwargs = {
+                "model": config.model,
+                "max_tokens": config.max_tokens,
+                "tools": config.tools,
+                "messages": messages,
+            }
+            if system:
+                create_kwargs["system"] = system
+
+            response = await client.messages.create(**create_kwargs)
             return response
 
         except RateLimitError as e:
@@ -298,17 +315,7 @@ IMPORTANT: Return ONLY the raw JSON object for {company['company_name']}.
     messages = [
         {
             "role": "user",
-            "content": [
-                {
-                    "type": "text",
-                    "text": system_prompt,
-                    "cache_control": {"type": "ephemeral"}
-                },
-                {
-                    "type": "text",
-                    "text": format_company_input(company)
-                }
-            ]
+            "content": format_company_input(company)
         },
         {
             "role": "assistant",
@@ -321,7 +328,7 @@ IMPORTANT: Return ONLY the raw JSON object for {company['company_name']}.
     ]
 
     try:
-        response = await call_api_with_retry(client, messages, config, max_retries=2)
+        response = await call_api_with_retry(client, messages, config, system_prompt=system_prompt, max_retries=2)
         text = get_response_text(response)
         return extract_json_from_response(text)
     except Exception:
@@ -361,24 +368,14 @@ async def process_company(
             # Wait for rate limiter
             await rate_limiter.acquire(estimated_searches=7)
 
-            # Build message with cache control
+            # Build message with company data only (system prompt passed separately for caching)
             messages = [{
                 "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": system_prompt,
-                        "cache_control": {"type": "ephemeral"}
-                    },
-                    {
-                        "type": "text",
-                        "text": format_company_input(company)
-                    }
-                ]
+                "content": format_company_input(company)
             }]
 
-            # Call API
-            response = await call_api_with_retry(client, messages, config)
+            # Call API with system prompt as separate parameter for proper caching
+            response = await call_api_with_retry(client, messages, config, system_prompt=system_prompt)
 
             # Extract usage and update rate limiter
             usage_stats = get_usage_stats(response)
