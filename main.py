@@ -14,7 +14,7 @@ from typing import List, Dict, Optional
 
 from anthropic import AsyncAnthropic
 
-from config import Config, BUSINESS_TYPE_TAGS
+from config import Config
 from file_utils import (
     IndexManager,
     ErrorLogger,
@@ -209,29 +209,6 @@ def filter_unprocessed(
     ]
 
 
-def filter_by_business_type(
-    companies: List[Dict[str, str]],
-    allowed_tags: List[str],
-) -> List[Dict[str, str]]:
-    """
-    Filter companies by business type.
-
-    Args:
-        companies: List of company dicts.
-        allowed_tags: List of allowed typeOfBusiness values.
-
-    Returns:
-        Filtered list of companies.
-    """
-    if not allowed_tags:
-        return companies
-
-    return [
-        c for c in companies
-        if c.get("typeOfBusiness") in allowed_tags
-    ]
-
-
 def parse_args() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
@@ -321,15 +298,6 @@ def main() -> int:
         return 1
 
     print(f"Loaded {len(companies)} companies from CSV")
-
-    # Filter by business type tags
-    if BUSINESS_TYPE_TAGS:
-        original_count = len(companies)
-        companies = filter_by_business_type(companies, BUSINESS_TYPE_TAGS)
-        filtered = original_count - len(companies)
-        if filtered > 0:
-            print(f"Filtered by business type: {len(companies)} companies ({filtered} excluded)")
-            print(f"Active tags: {BUSINESS_TYPE_TAGS}")
 
     # Filter specific companies if requested
     if args.companies:

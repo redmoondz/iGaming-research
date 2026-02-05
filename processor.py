@@ -150,7 +150,7 @@ def extract_json_from_response(response_text: str) -> Optional[Dict[str, Any]]:
 
 def validate_response(response: Dict[str, Any]) -> Tuple[bool, List[str]]:
     """
-    Validate Claude's response structure.
+    Validate Claude's response structure (V7 format).
 
     Args:
         response: Parsed JSON response.
@@ -161,18 +161,24 @@ def validate_response(response: Dict[str, Any]) -> Tuple[bool, List[str]]:
     errors = []
 
     # Required top-level fields
-    required_top = ["company_name", "research_date", "qualification"]
+    required_top = ["company_name", "research_date", "company_classification", "qualification"]
     for field_name in required_top:
         if field_name not in response:
             errors.append(f"Missing required field: {field_name}")
+
+    # Check company_classification structure
+    classification = response.get("company_classification", {})
+    if "type" not in classification:
+        errors.append("Missing company_classification.type")
 
     # Check qualification structure
     qual = response.get("qualification", {})
     if "overall_qualified" not in qual:
         errors.append("Missing qualification.overall_qualified")
 
-    # If qualified=True, must have profile_data
-    if qual.get("overall_qualified") and "profile_data" not in response:
+    # If qualified=True, must have profile_data (unless NOT_RELEVANT)
+    is_not_relevant = classification.get("type") == "NOT_RELEVANT"
+    if qual.get("overall_qualified") and "profile_data" not in response and not is_not_relevant:
         errors.append("Qualified company missing profile_data")
 
     return len(errors) == 0, errors

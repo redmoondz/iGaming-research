@@ -21,6 +21,7 @@ def flatten_for_csv(results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
     for r in results:
         result = r.get("result", {}) or {}
+        classification = result.get("company_classification", {}) or {}
         qual = result.get("qualification", {}) or {}
         profile = result.get("profile_data", {}) or {}
         meta = r.get("meta", {}) or {}
@@ -40,16 +41,18 @@ def flatten_for_csv(results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             "linkedin_url": result.get("linkedin_url"),
             "research_date": result.get("research_date"),
 
+            # Company Classification (V7)
+            "company_type": classification.get("type"),
+            "company_sub_type": classification.get("sub_type"),
+            "classification_details": classification.get("details"),
+            "service_relevance": classification.get("service_relevance"),
+
             # Qualification
             "overall_qualified": qual.get("overall_qualified"),
             "legal_status": qual.get("legal_standing", {}).get("status") if qual.get("legal_standing") else None,
             "legal_details": qual.get("legal_standing", {}).get("details") if qual.get("legal_standing") else None,
             "portfolio_status": qual.get("game_portfolio", {}).get("status") if qual.get("game_portfolio") else None,
             "game_types": ", ".join(qual.get("game_portfolio", {}).get("game_types_found", []) or []) if qual.get("game_portfolio") else None,
-            "business_functions_status": qual.get("business_functions", {}).get("status") if qual.get("business_functions") else None,
-            "has_development": qual.get("business_functions", {}).get("development", {}).get("present") if qual.get("business_functions", {}).get("development") else None,
-            "has_publishing": qual.get("business_functions", {}).get("publishing_marketing", {}).get("present") if qual.get("business_functions", {}).get("publishing_marketing") else None,
-            "has_live_ops": qual.get("business_functions", {}).get("live_operations", {}).get("present") if qual.get("business_functions", {}).get("live_operations") else None,
 
             # Profile data (only present for qualified)
             "total_games": profile.get("portfolio_size", {}).get("total_games") if profile.get("portfolio_size") else None,
@@ -63,7 +66,9 @@ def flatten_for_csv(results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             "has_external_funding": profile.get("funding", {}).get("has_external_funding") if profile.get("funding") else None,
             "public_company": profile.get("funding", {}).get("public_company") if profile.get("funding") else None,
             "has_art_team": profile.get("in_house_creative", {}).get("has_art_team") if profile.get("in_house_creative") else None,
+            "has_video_production": profile.get("in_house_creative", {}).get("has_video_production") if profile.get("in_house_creative") else None,
             "art_team_size": profile.get("in_house_creative", {}).get("team_size_estimate") if profile.get("in_house_creative") else None,
+            "likely_needs_external_support": profile.get("in_house_creative", {}).get("likely_needs_external_support") if profile.get("in_house_creative") else None,
 
             # Notes
             "research_notes": result.get("research_notes"),

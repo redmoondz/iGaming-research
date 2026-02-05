@@ -22,7 +22,7 @@ class Config:
 
     # Rate Limiting
     web_search_rpm: int = 30
-    initial_concurrency: int = 2  # Lower to reduce cache creation race after warmup
+    initial_concurrency: int = 3  # Lower to reduce cache creation race after warmup
     max_concurrency: int = 10
 
     # Retry
@@ -32,7 +32,7 @@ class Config:
 
     # Paths
     base_dir: Path = field(default_factory=lambda: Path(__file__).parent)
-    input_file: Path = field(default_factory=lambda: Path("data/input/companies.csv"))
+    input_file: Path = field(default_factory=lambda: Path("data/input/Suppliers_B1.csv")) #companies
     raw_output_dir: Path = field(default_factory=lambda: Path("data/raw"))
     output_dir: Path = field(default_factory=lambda: Path("data/output"))
     system_prompt_file: Path = field(default_factory=lambda: Path("prompts/system_prompt.txt"))
@@ -56,7 +56,7 @@ class Config:
         self.tools = [{
             "type": "web_search_20250305",
             "name": "web_search",
-            "max_uses": 10  #TODO: adjust if prompt changes
+            "max_uses": 10  # Maximum 10 web searches per company (per prompt V3)
         }]
 
     def validate(self) -> None:
@@ -96,9 +96,3 @@ CSV_COLUMNS = {
     "new_regions": "newRegionsTargeting",
 }
 
-# Business type filters
-# Comment out a tag to exclude companies of that type
-BUSINESS_TYPE_TAGS = [
-    # "Supplier (product, technology or service)",
-    "Operator (team involved in offering betting / games / slots to consumers)",
-]
