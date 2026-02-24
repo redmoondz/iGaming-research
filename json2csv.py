@@ -47,6 +47,7 @@ def make_readable_header(key: str) -> str:
         'result.company_name': 'Company Name',
         'result.website': 'Website',
         'result.linkedin_url': 'LinkedIn URL',
+        'result.headquarters_country': 'Headquarters Country',
         'result.research_date': 'Research Date',
 
         # Classification
@@ -54,6 +55,11 @@ def make_readable_header(key: str) -> str:
         'result.company_classification.sub_type': 'Company Sub-Type',
         'result.company_classification.details': 'Classification Details',
         'result.company_classification.service_relevance': 'Service Relevance',
+
+        # Qualification - Headquarters Country
+        'result.qualification.headquarters_country.status': 'HQ Country Status',
+        'result.qualification.headquarters_country.country': 'HQ Country',
+        'result.qualification.headquarters_country.details': 'HQ Country Details',
 
         # Qualification - Legal Standing
         'result.qualification.legal_standing.status': 'Legal Status',
@@ -181,8 +187,12 @@ def main():
         'result.company_name',
         'result.website',
         'result.linkedin_url',
+        'result.headquarters_country',
         'result.company_classification.type',
         'result.company_classification.details',
+        'result.qualification.headquarters_country.status',
+        'result.qualification.headquarters_country.country',
+        'result.qualification.headquarters_country.details',
         'result.qualification.legal_standing.status',
         'result.qualification.legal_standing.details',
         'result.qualification.game_portfolio.status',
