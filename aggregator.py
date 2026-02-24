@@ -27,7 +27,70 @@ def flatten_for_csv(results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         meta = r.get("meta", {}) or {}
         usage = meta.get("usage", {}) or {}
 
+        legal = qual.get("legal_standing") or {}
+        game_portfolio = qual.get("game_portfolio") or {}
+        portfolio_size = profile.get("portfolio_size") or {}
+        release_frequency = profile.get("release_frequency") or {}
+        company_size = profile.get("company_size") or {}
+        revenue = profile.get("revenue") or {}
+        external_partnerships = profile.get("external_partnerships") or {}
+        funding = profile.get("funding") or {}
+        in_house_creative = profile.get("in_house_creative") or {}
+
         row = {
+            # Basic info
+            "company_name": result.get("company_name"),
+            "website": result.get("website"),
+            "linkedin_url": result.get("linkedin_url"),
+
+            # Company Classification
+            "company_type": classification.get("type"),
+            "classification_details": classification.get("details"),
+
+            # Qualification — Legal
+            "legal_status": legal.get("status"),
+            "legal_details": legal.get("details"),
+
+            # Qualification — Game Portfolio
+            "portfolio_status": game_portfolio.get("status"),
+            "game_portfolio_details": game_portfolio.get("details"),
+            "game_types": ", ".join(game_portfolio.get("game_types_found", []) or []),
+
+            # Qualification — Overall
+            "overall_qualified": qual.get("overall_qualified"),
+
+            # Profile — Portfolio Size
+            "total_games": portfolio_size.get("total_games"),
+            "total_games_description": portfolio_size.get("total_games_description"),
+
+            # Profile — Release Frequency
+            "games_last_2_years": release_frequency.get("games_last_2_years"),
+            "release_frequency_description": release_frequency.get("description"),
+            "recent_titles": release_frequency.get("recent_titles"),
+
+            # Profile — Company Size
+            "employee_count": company_size.get("employee_count"),
+
+            # Profile — Revenue
+            "revenue_usd": revenue.get("amount"),
+            "revenue_details": revenue.get("details"),
+
+            # Profile — External Partnerships
+            "works_with_external_studios": external_partnerships.get("works_with_external_studios"),
+            "eu_based_studios": external_partnerships.get("eu_based_studios"),
+            "external_partnerships_details": external_partnerships.get("details"),
+
+            # Profile — Funding
+            "has_external_funding": funding.get("has_external_funding"),
+            "funding_rounds": funding.get("funding_rounds"),
+            "public_company": funding.get("public_company"),
+
+            # Profile — In-House Creative
+            "has_art_team": in_house_creative.get("has_art_team"),
+            "has_video_production": in_house_creative.get("has_video_production"),
+            "art_team_size": in_house_creative.get("team_size_estimate"),
+            "in_house_creative_evidence": in_house_creative.get("evidence"),
+
             # Meta
             "processed_at": meta.get("processed_at"),
             "processing_time_sec": meta.get("processing_time_sec"),
@@ -35,42 +98,8 @@ def flatten_for_csv(results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             "input_tokens": usage.get("input_tokens"),
             "output_tokens": usage.get("output_tokens"),
 
-            # Basic info
-            "company_name": result.get("company_name"),
-            "website": result.get("website"),
-            "linkedin_url": result.get("linkedin_url"),
-            "research_date": result.get("research_date"),
-
-            # Company Classification (V7)
-            "company_type": classification.get("type"),
-            "company_sub_type": classification.get("sub_type"),
-            "classification_details": classification.get("details"),
-            "service_relevance": classification.get("service_relevance"),
-
-            # Qualification
-            "overall_qualified": qual.get("overall_qualified"),
-            "legal_status": qual.get("legal_standing", {}).get("status") if qual.get("legal_standing") else None,
-            "legal_details": qual.get("legal_standing", {}).get("details") if qual.get("legal_standing") else None,
-            "portfolio_status": qual.get("game_portfolio", {}).get("status") if qual.get("game_portfolio") else None,
-            "game_types": ", ".join(qual.get("game_portfolio", {}).get("game_types_found", []) or []) if qual.get("game_portfolio") else None,
-
-            # Profile data (only present for qualified)
-            "total_games": profile.get("portfolio_size", {}).get("total_games") if profile.get("portfolio_size") else None,
-            "portfolio_confidence": profile.get("portfolio_size", {}).get("confidence") if profile.get("portfolio_size") else None,
-            "games_last_2_years": profile.get("release_frequency", {}).get("games_last_2_years") if profile.get("release_frequency") else None,
-            "employee_count": profile.get("company_size", {}).get("employee_count") if profile.get("company_size") else None,
-            "revenue_usd": profile.get("revenue", {}).get("amount") if profile.get("revenue") else None,
-            "revenue_source": profile.get("revenue", {}).get("source") if profile.get("revenue") else None,
-            "works_with_external_studios": profile.get("external_partnerships", {}).get("works_with_external_studios") if profile.get("external_partnerships") else None,
-            "eu_based_studios": profile.get("external_partnerships", {}).get("eu_based_studios") if profile.get("external_partnerships") else None,
-            "has_external_funding": profile.get("funding", {}).get("has_external_funding") if profile.get("funding") else None,
-            "public_company": profile.get("funding", {}).get("public_company") if profile.get("funding") else None,
-            "has_art_team": profile.get("in_house_creative", {}).get("has_art_team") if profile.get("in_house_creative") else None,
-            "has_video_production": profile.get("in_house_creative", {}).get("has_video_production") if profile.get("in_house_creative") else None,
-            "art_team_size": profile.get("in_house_creative", {}).get("team_size_estimate") if profile.get("in_house_creative") else None,
-            "likely_needs_external_support": profile.get("in_house_creative", {}).get("likely_needs_external_support") if profile.get("in_house_creative") else None,
-
             # Notes
+            "research_date": result.get("research_date"),
             "research_notes": result.get("research_notes"),
             "data_gaps": ", ".join(result.get("data_gaps", []) or []),
         }

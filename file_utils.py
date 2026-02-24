@@ -134,7 +134,13 @@ def load_csv(filepath: Path) -> List[Dict[str, str]]:
         return []
 
     with open(filepath, 'r', encoding='utf-8-sig') as f:  # utf-8-sig handles BOM
-        reader = csv.DictReader(f)
+        sample = f.read(4096)
+        f.seek(0)
+        try:
+            dialect = csv.Sniffer().sniff(sample, delimiters=',\t|;')
+        except csv.Error:
+            dialect = csv.excel  # fallback to comma
+        reader = csv.DictReader(f, dialect=dialect)
         return list(reader)
 
 

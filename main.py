@@ -10,6 +10,7 @@ import argparse
 import asyncio
 import sys
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import List, Dict, Optional
 
 from anthropic import AsyncAnthropic
@@ -259,6 +260,12 @@ def parse_args() -> argparse.Namespace:
         help="Start fresh, ignoring previous progress"
     )
 
+    parser.add_argument(
+        "--input",
+        type=str,
+        help="Path to input CSV file (overrides config default)"
+    )
+
     return parser.parse_args()
 
 
@@ -272,6 +279,12 @@ def main() -> int:
     # Override concurrency if specified
     if args.concurrency:
         config.initial_concurrency = args.concurrency
+
+    # Override input file if specified
+    if args.input:
+        config.input_file = Path(args.input)
+        if not config.input_file.is_absolute():
+            config.input_file = config.base_dir / config.input_file
 
     # Validate config
     try:
